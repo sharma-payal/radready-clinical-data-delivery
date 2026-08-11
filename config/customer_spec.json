@@ -1,0 +1,39 @@
+{
+  "project_id": "BS-RAD-001",
+  "customer": "Frontier Health AI Lab (fictional)",
+  "use_case": "Evaluate longitudinal change-detection performance on adult chest CT reports",
+  "cohort": {
+    "modality": "CT",
+    "body_part": "CHEST",
+    "minimum_age": 18,
+    "minimum_studies_per_patient": 2,
+    "minimum_followup_days": 90,
+    "maximum_followup_days": 1095,
+    "require_signed_report": true,
+    "require_research_consent": true,
+    "required_license_status": "approved"
+  },
+  "required_study_fields": [
+    "study_uid",
+    "patient_token",
+    "study_date",
+    "modality",
+    "body_part",
+    "accession_token",
+    "images_count",
+    "source_site",
+    "license_status"
+  ],
+  "quality_gates": {
+    "metadata_completeness_min": 0.98,
+    "report_linkage_min": 0.98,
+    "phi_scan_pass_min": 0.99,
+    "longitudinal_coverage_min": 0.95,
+    "license_approval_min": 1.0
+  },
+  "delivery": {
+    "format": "CSV + JSON QC report + SHA-256 checksums",
+    "date_shift_policy": "Patient-consistent synthetic dates; no real patient data",
+    "acceptance_window_business_days": 5
+  }
+}

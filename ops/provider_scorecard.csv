@@ -1,0 +1,4 @@
+provider,clinical_fit_25,rights_readiness_20,metadata_quality_15,deidentification_15,longitudinal_depth_15,delivery_ops_10,weighted_score_100,key_risk,recommendation
+Bay Imaging,5,5,4,4,5,4,91,Needs external de-identification validation,Primary pilot
+Lakeview Radiology,4,3,5,5,4,5,85,Derivative model rights unresolved,Hold pending rights addendum
+Metro Diagnostics,3,5,3,4,3,3,70,Lower longitudinal depth and variable metadata,Backup / targeted gap fill
