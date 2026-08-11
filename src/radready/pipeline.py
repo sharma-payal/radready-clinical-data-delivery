@@ -9,6 +9,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .governance import GovernanceError, audit_privacy_and_rights
+
 
 PHI_PATTERNS = {
     "phone_number": re.compile(r"\b(?:\+?1[-. ]?)?\(?\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b"),
@@ -45,8 +47,28 @@ def _scan_phi(text: str) -> list[str]:
     return [name for name, pattern in PHI_PATTERNS.items() if pattern.search(text)]
 
 
-def run_delivery(raw_dir: Path, output_dir: Path, spec_path: Path) -> dict[str, Any]:
+def run_delivery(
+    raw_dir: Path,
+    output_dir: Path,
+    spec_path: Path,
+    rights_registry_path: Path | None = None,
+) -> dict[str, Any]:
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    registry_path = rights_registry_path or spec_path.with_name("data_rights_registry.json")
+    governance_audit = audit_privacy_and_rights(raw_dir, registry_path)
+    governance_spec = spec.get("governance", {})
+    expected_governance = {
+        "project_mode": governance_audit["project_mode"],
+        "external_data_allowed": False,
+        "required_data_origin": "project_generator",
+        "generated_data_license": governance_audit["generated_data_license"],
+    }
+    mismatches = [
+        key for key, expected in expected_governance.items()
+        if governance_spec.get(key) != expected
+    ]
+    if mismatches:
+        raise GovernanceError(f"Customer contract and rights registry disagree: {', '.join(mismatches)}")
     patients = read_csv(raw_dir / "patients.csv")
     studies = read_csv(raw_dir / "studies.csv")
     reports = read_csv(raw_dir / "reports.csv")
@@ -207,7 +229,7 @@ def run_delivery(raw_dir: Path, output_dir: Path, spec_path: Path) -> dict[str, 
         "project_id": spec["project_id"],
         "customer": spec["customer"],
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "data_classification": "SYNTHETIC — NOT FOR CLINICAL USE",
+        "data_classification": governance_audit["classification"],
         "delivery_status": "READY" if all(g["status"] == "PASS" for g in gates.values()) else "REVIEW_REQUIRED",
         "readiness_score": readiness_score,
         "source_counts": {"patients": len(patients), "studies": len(studies), "reports": len(reports)},
@@ -222,6 +244,14 @@ def run_delivery(raw_dir: Path, output_dir: Path, spec_path: Path) -> dict[str, 
         "quarantine_reasons": dict(reason_counts.most_common()),
         "cohort_exclusions": dict(exclusion_counts.most_common()),
         "sample_timelines": sorted(timeline_rows, key=lambda row: row["followup_days"], reverse=True)[:8],
+        "governance": {
+            "status": governance_audit["status"],
+            "project_mode": governance_audit["project_mode"],
+            "external_dataset_count": governance_audit["external_dataset_count"],
+            "registered_sources": governance_audit["registered_sources"],
+            "software_license": governance_audit["software_license"],
+            "generated_data_license": governance_audit["generated_data_license"],
+        },
         "limitations": [
             "All records are synthetic and demonstrate operations, not clinical validity.",
             "Regex screening is a first-pass safeguard and does not replace expert de-identification certification.",
@@ -236,8 +266,9 @@ def run_delivery(raw_dir: Path, output_dir: Path, spec_path: Path) -> dict[str, 
     write_csv(output_dir / "cohort_manifest.csv", manifest)
     write_csv(output_dir / "quarantine_log.csv", quarantine, ["study_uid", "patient_token", "reasons", "disposition"])
     (output_dir / "qc_report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "governance_audit.json").write_text(json.dumps(governance_audit, indent=2) + "\n", encoding="utf-8")
     _write_acceptance(output_dir / "customer_acceptance.md", report, spec)
-    _write_checksums(output_dir)
+    write_checksums(output_dir)
     return report
 
 
@@ -265,6 +296,14 @@ def _write_acceptance(path: Path, report: dict[str, Any], spec: dict[str, Any]) 
 
 {gates}
 
+## Privacy and rights preflight
+
+- Governance audit: **{report['governance']['status']}**
+- Project mode: `{report['governance']['project_mode']}`
+- External datasets: **{report['governance']['external_dataset_count']}**
+- Software license: `{report['governance']['software_license']}`
+- Generated synthetic data: `{report['governance']['generated_data_license']}`
+
 ## Known limitations
 
 """ + "\n".join(f"- {item}" for item in report["limitations"]) + f"""
@@ -282,7 +321,7 @@ Acceptance window: {spec['delivery']['acceptance_window_business_days']} busines
     path.write_text(body, encoding="utf-8")
 
 
-def _write_checksums(output_dir: Path) -> None:
+def write_checksums(output_dir: Path) -> None:
     lines = []
     for path in sorted(output_dir.iterdir()):
         if path.is_file() and path.name != "checksums.sha256":

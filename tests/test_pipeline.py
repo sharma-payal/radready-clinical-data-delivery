@@ -7,12 +7,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from radready.governance import GovernanceError, audit_privacy_and_rights
 from radready.pipeline import run_delivery
 from radready.synthetic import generate_dataset
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "config" / "customer_spec.json"
+REGISTRY = ROOT / "config" / "data_rights_registry.json"
 
 
 class DeliveryPipelineTest(unittest.TestCase):
@@ -52,6 +54,9 @@ class DeliveryPipelineTest(unittest.TestCase):
             self.assertEqual(study["modality"], spec["cohort"]["modality"])
             self.assertEqual(study["body_part"], spec["cohort"]["body_part"])
             self.assertEqual(study["license_status"], "approved")
+            self.assertEqual(study["synthetic_flag"], "true")
+            self.assertEqual(study["data_origin"], "project_generator")
+            self.assertEqual(study["rights_basis"], "author_generated_synthetic")
             self.assertEqual(reports[study["study_uid"]]["signed_status"], "final")
             self.assertEqual(patients[study["patient_token"]]["consent"], "research")
             self.assertGreaterEqual(int(patients[study["patient_token"]]["age"]), 18)
@@ -76,6 +81,46 @@ class DeliveryPipelineTest(unittest.TestCase):
     def test_all_contractual_quality_gates_pass(self) -> None:
         self.assertEqual(self.report["delivery_status"], "READY")
         self.assertTrue(all(gate["status"] == "PASS" for gate in self.report["quality_gates"].values()))
+        self.assertEqual(self.report["governance"]["status"], "PASS")
+        self.assertEqual(self.report["governance"]["external_dataset_count"], 0)
+
+    def test_governance_audit_confirms_provenance_and_license(self) -> None:
+        audit = audit_privacy_and_rights(self.raw, REGISTRY)
+        self.assertEqual(audit["status"], "PASS")
+        self.assertEqual(audit["project_mode"], "synthetic_only")
+        self.assertEqual(audit["generated_data_license"], "CC0-1.0")
+        self.assertEqual(audit["external_dataset_count"], 0)
+        self.assertEqual(audit["observed_sources"], ["SYNTH_SITE_A", "SYNTH_SITE_B", "SYNTH_SITE_C"])
+
+    def test_governance_fails_closed_on_non_synthetic_row(self) -> None:
+        path = self.raw / "patients.csv"
+        rows = []
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            fieldnames = list(reader.fieldnames or [])
+            rows = list(reader)
+        rows[0]["synthetic_flag"] = "false"
+        with path.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+        with self.assertRaises(GovernanceError):
+            run_delivery(self.raw, Path(self.temp.name) / "blocked", SPEC, REGISTRY)
+
+    def test_governance_fails_closed_on_external_dataset_registry(self) -> None:
+        registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
+        registry["external_datasets"] = [{"name": "unapproved-source"}]
+        registry_path = Path(self.temp.name) / "blocked_registry.json"
+        registry_path.write_text(json.dumps(registry), encoding="utf-8")
+        with self.assertRaises(GovernanceError):
+            audit_privacy_and_rights(self.raw, registry_path)
+
+    def test_governance_audit_is_covered_by_delivery_checksum(self) -> None:
+        lines = (self.output / "checksums.sha256").read_text(encoding="utf-8").splitlines()
+        checksum_by_name = {line.split("  ", 1)[1]: line.split("  ", 1)[0] for line in lines}
+        path = self.output / "governance_audit.json"
+        self.assertIn(path.name, checksum_by_name)
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), checksum_by_name[path.name])
 
     def test_generation_is_deterministic(self) -> None:
         second_raw = Path(self.temp.name) / "raw_second"

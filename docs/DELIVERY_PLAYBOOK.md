@@ -24,6 +24,7 @@
 ## Delivery go/no-go checklist
 
 - Customer spec is versioned and scope owner is named.
+- Governance audit confirms synthetic provenance for this demo; any external data blocks delivery.
 - Provider rights cover intended use, geography, retention, and derivatives.
 - Patient and study counts match the manifest.
 - Every delivered study has a qualifying patient, final report, consent, and approved license.
@@ -32,6 +33,7 @@
 - File and row checksums reproduce.
 - Clinical reviewer and customer technical owner have a named sign-off path.
 - Limitations are visible in the QC report and acceptance record.
+- Software and dataset licenses are identified separately and match the rights registry.
 
 ## Status update template
 

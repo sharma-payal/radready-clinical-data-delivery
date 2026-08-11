@@ -6,13 +6,20 @@ from datetime import date, timedelta
 from pathlib import Path
 
 
-PATIENT_FIELDS = ["patient_token", "age", "sex", "state", "consent", "source_site"]
+PATIENT_FIELDS = [
+    "patient_token", "age", "sex", "state", "consent", "source_site",
+    "synthetic_flag", "data_origin",
+]
 STUDY_FIELDS = [
     "study_uid", "patient_token", "study_date", "modality", "body_part",
     "accession_token", "description", "images_count", "slice_thickness_mm",
-    "contrast", "source_site", "license_status",
+    "contrast", "source_site", "license_status", "rights_basis",
+    "rights_registry_id", "synthetic_flag", "data_origin",
 ]
-REPORT_FIELDS = ["report_id", "study_uid", "report_text", "impression", "signed_status"]
+REPORT_FIELDS = [
+    "report_id", "study_uid", "report_text", "impression", "signed_status",
+    "synthetic_flag", "data_origin",
+]
 
 
 def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, object]]) -> None:
@@ -29,7 +36,12 @@ def generate_dataset(output_dir: Path, seed: int = 42, patient_count: int = 180)
     patients: list[dict[str, object]] = []
     studies: list[dict[str, object]] = []
     reports: list[dict[str, object]] = []
-    sites = ["Bay Imaging", "Lakeview Radiology", "Metro Diagnostics"]
+    sites = ["SYNTH_SITE_A", "SYNTH_SITE_B", "SYNTH_SITE_C"]
+    registry_ids = {
+        "SYNTH_SITE_A": "RR-SYNTH-A-001",
+        "SYNTH_SITE_B": "RR-SYNTH-B-001",
+        "SYNTH_SITE_C": "RR-SYNTH-C-001",
+    }
     base_date = date(2022, 1, 1)
     study_counter = 0
 
@@ -44,6 +56,8 @@ def generate_dataset(output_dir: Path, seed: int = 42, patient_count: int = 180)
             "state": rng.choice(["CA", "TX", "NY", "WA", "IL"]),
             "consent": "research" if index % 17 else "clinical_only",
             "source_site": site,
+            "synthetic_flag": "true",
+            "data_origin": "project_generator",
         })
 
         study_total = rng.randint(2, 4) if is_target else rng.randint(1, 3)
@@ -73,6 +87,10 @@ def generate_dataset(output_dir: Path, seed: int = 42, patient_count: int = 180)
                 "contrast": "Y" if "W CONTRAST" in description else "N",
                 "source_site": site,
                 "license_status": "approved" if index % 19 else "pending",
+                "rights_basis": "author_generated_synthetic",
+                "rights_registry_id": registry_ids[site],
+                "synthetic_flag": "true",
+                "data_origin": "project_generator",
             })
             finding = rng.choice(["stable pulmonary nodules", "no acute cardiopulmonary process", "mild emphysema"])
             reports.append({
@@ -81,12 +99,14 @@ def generate_dataset(output_dir: Path, seed: int = 42, patient_count: int = 180)
                 "report_text": f"Synthetic exam. Findings demonstrate {finding}.",
                 "impression": finding.capitalize() + ".",
                 "signed_status": "final" if study_counter % 31 else "preliminary",
+                "synthetic_flag": "true",
+                "data_origin": "project_generator",
             })
 
     # Seed auditable failure modes that a realistic delivery workflow must catch.
     studies[4]["accession_token"] = ""
     studies.append(dict(studies[11]))  # duplicate StudyInstanceUID
-    reports[19]["report_text"] += " Callback: 415-555-0134."  # synthetic PHI-like pattern
+    reports[19]["report_text"] += " Callback: 202-555-0111."  # fictional PHI-like test pattern
     missing_report_uids = {studies[450]["study_uid"], studies[451]["study_uid"]}
     reports = [report for report in reports if report["study_uid"] not in missing_report_uids]
     reports.append({
@@ -95,6 +115,8 @@ def generate_dataset(output_dir: Path, seed: int = 42, patient_count: int = 180)
         "report_text": "Synthetic orphan report.",
         "impression": "No linked study.",
         "signed_status": "final",
+        "synthetic_flag": "true",
+        "data_origin": "project_generator",
     })
 
     _write_csv(output_dir / "patients.csv", PATIENT_FIELDS, patients)

@@ -1,0 +1,49 @@
+{
+  "registry_version": "1.0",
+  "project_mode": "synthetic_only",
+  "classification": "SYNTHETIC — NOT PHI — NOT FOR CLINICAL USE",
+  "software_license": "MIT",
+  "generated_data_license": "CC0-1.0",
+  "external_datasets": [],
+  "allowed_uses": [
+    "portfolio demonstration",
+    "education",
+    "software testing",
+    "research prototyping"
+  ],
+  "prohibited_claims": [
+    "clinical validation",
+    "diagnostic fitness",
+    "HIPAA compliance certification",
+    "provider endorsement"
+  ],
+  "providers": [
+    {
+      "provider_id": "SYNTH_SITE_A",
+      "display_name": "Synthetic Provider A",
+      "is_fictional": true,
+      "data_origin": "project_generator",
+      "rights_basis": "author_generated_synthetic",
+      "rights_registry_id": "RR-SYNTH-A-001",
+      "status": "approved"
+    },
+    {
+      "provider_id": "SYNTH_SITE_B",
+      "display_name": "Synthetic Provider B",
+      "is_fictional": true,
+      "data_origin": "project_generator",
+      "rights_basis": "author_generated_synthetic",
+      "rights_registry_id": "RR-SYNTH-B-001",
+      "status": "approved"
+    },
+    {
+      "provider_id": "SYNTH_SITE_C",
+      "display_name": "Synthetic Provider C",
+      "is_fictional": true,
+      "data_origin": "project_generator",
+      "rights_basis": "author_generated_synthetic",
+      "rights_registry_id": "RR-SYNTH-C-001",
+      "status": "approved"
+    }
+  ]
+}

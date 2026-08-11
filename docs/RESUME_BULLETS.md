@@ -5,7 +5,7 @@ Use only metrics you have reproduced locally with `make demo`.
 ## Strong two-bullet version
 
 - Built **RadReady**, a zero-dependency clinical data delivery simulator that translates an AI-lab use case into an executable contract and assembles a synthetic longitudinal chest CT cohort of **112 patients / 318 studies** from multi-provider source data.
-- Designed auditable quality controls for metadata, study-report linkage, consent, licensing, longitudinal coverage, and PHI-pattern screening; generated quarantine evidence, integrity manifests, executive QC dashboard, and customer acceptance package with automated contract tests.
+- Designed auditable quality controls for metadata, study-report linkage, consent, licensing, longitudinal coverage, and PHI-pattern screening; added a fail-closed source-rights registry, separate MIT/CC0 licensing, quarantine evidence, integrity manifests, and automated contract tests.
 
 ## One-line project entry
 
