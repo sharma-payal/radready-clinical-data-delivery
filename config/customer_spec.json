@@ -2,6 +2,13 @@
   "project_id": "BS-RAD-001",
   "customer": "Frontier Health AI Lab (fictional)",
   "use_case": "Evaluate longitudinal change-detection performance on adult chest CT reports",
+  "governance": {
+    "project_mode": "synthetic_only",
+    "rights_registry": "config/data_rights_registry.json",
+    "external_data_allowed": false,
+    "required_data_origin": "project_generator",
+    "generated_data_license": "CC0-1.0"
+  },
   "cohort": {
     "modality": "CT",
     "body_part": "CHEST",
@@ -22,7 +29,11 @@
     "accession_token",
     "images_count",
     "source_site",
-    "license_status"
+    "license_status",
+    "rights_basis",
+    "rights_registry_id",
+    "synthetic_flag",
+    "data_origin"
   ],
   "quality_gates": {
     "metadata_completeness_min": 0.98,
@@ -34,6 +45,7 @@
   "delivery": {
     "format": "CSV + JSON QC report + SHA-256 checksums",
     "date_shift_policy": "Patient-consistent synthetic dates; no real patient data",
+    "classification": "SYNTHETIC — NOT PHI — NOT FOR CLINICAL USE",
     "acceptance_window_business_days": 5
   }
 }

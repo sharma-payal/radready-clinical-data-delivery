@@ -2,7 +2,7 @@
 
 ## Recommendation
 
-Start a representative 1–5% pilot with **Bay Imaging** (fictional), conditioned on independent validation of its de-identification process. Keep Lakeview as the technical-quality fallback only after derivative-model rights are resolved in writing.
+Start a representative 1–5% pilot with **Synthetic Provider A**, conditioned on independent validation of its de-identification process. Keep Synthetic Provider B as the technical-quality fallback only after derivative-model rights are resolved in writing. All providers and scores in this memo are fictional scenario inputs.
 
 ## Scoring method
 
@@ -33,6 +33,6 @@ Rights readiness ranks nearly as high as clinical fit because unusable rights ma
 
 | Decision | Owner | Trigger to revisit |
 |---|---|---|
-| Bay Imaging selected for pilot | Clinical Data Lead | De-identification evidence fails review |
-| Lakeview placed on rights hold | Commercial/legal owner | Executed derivative-rights addendum |
-| Metro used only for gap fill | Sourcing owner | Cohort diversity or volume misses target |
+| Synthetic Provider A selected for pilot | Clinical Data Lead | De-identification evidence fails review |
+| Synthetic Provider B placed on rights hold | Commercial/legal owner | Executed derivative-rights addendum |
+| Synthetic Provider C used only for gap fill | Sourcing owner | Cohort diversity or volume misses target |

@@ -7,6 +7,7 @@ name = "radready"
 version = "0.1.0"
 description = "A synthetic longitudinal radiology dataset delivery and quality-control simulator"
 requires-python = ">=3.11"
+license = {file = "LICENSE"}
 dependencies = []
 
 [project.scripts]

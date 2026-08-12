@@ -23,12 +23,15 @@ Open `artifacts/delivery/dashboard.html`.
 Point out:
 
 - the source-to-delivery cohort funnel;
+- the `GOVERNANCE PASS` banner, synthetic-only mode, zero external datasets, and CC0 data license;
 - actual versus contracted quality gates;
 - seeded defects caught before cohort selection;
 - sample patient timelines;
 - visible limitations and synthetic-data classification.
 
 Then open `quarantine_log.csv` and `cohort_manifest.csv` to show that the executive summary has row-level evidence.
+
+Run `make audit` and open `governance_audit.json` to show that provenance and permission assertions fail closed before delivery.
 
 ## 2:15–3:00 — Close on ownership
 
@@ -39,5 +42,7 @@ Then open `quarantine_log.csv` and `cohort_manifest.csv` to show that the execut
 **Why not maximize cohort size?** Because research consent, usage rights, final reports, and timeline fitness are part of the product. Volume without usability is misleading.
 
 **Is the PHI scanner sufficient?** No. It is deliberately described as first-pass triage. Production delivery needs an agreed de-identification standard, expert validation, image-header/pixel review, and contractual controls.
+
+**Do you have permission to publish this dataset?** The repository contains no external dataset. The generator output is author-created synthetic data dedicated under CC0-1.0; software remains MIT. A rights registry and CI tests block unregistered or non-synthetic input.
 
 **What would break at scale?** In-memory CSV processing, manual provider evidence review, and simplistic terminology normalization. I would move computation to a warehouse, version schemas in a registry, and make gates observable by provider and batch.
